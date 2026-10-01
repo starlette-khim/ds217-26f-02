@@ -16,19 +16,40 @@ OUTPUT_DIR = Path("output")
 
 
 def read_encounters(data_path):
-    """TODO: describe what one usable encounter looks like.
-
-    Give back two values: the list of usable encounters, and how many data
-    rows you skipped. `main()` unpacks them the way the lecture unpacks a
-    tuple, with two names on the left of the `=`.
     """
-    # TODO: read the rows and skip the header line.
-    # TODO: keep a row only when it has three fields, int() can read the
-    #       systolic field, and the reading is plausible.
-    # TODO: count every other data row as skipped, the blank line included,
-    #       and print one line per skipped row so you can see what dropped out.
-    # TODO: end with `return encounters, skipped`.
-    pass
+    Read the encounter file and return (enouncters, skipped).
+    
+    Each usable encounter is a dictionary with keys "patient_id" and "systolic".
+    """
+
+    with data_path.open("r", encoding="utf-8") as data_file:
+        rows = data_file.readlines()
+    
+    encounters = []
+    skipped = 0
+    for row in rows[1:]:  # Skip the header line
+        if not row.strip():
+            print("Skipping a blank row.")
+            skipped += 1
+            continue
+        fields = row.strip().split(",")
+        if len(fields) != 3:
+            print(f"Skipping a row with {len(fields)} fields: {row.strip()}")
+            skipped += 1
+            continue
+        patient_id, visit_date, raw_systolic = fields
+        try:
+            systolic = int(raw_systolic)
+        except ValueError as error:
+            print(f"Skipping {patient_id}: {error}")
+            skipped += 1
+        else:
+            if not (60 <= systolic <= 250):
+                print(f"Skipping {patient_id}: Systolic reading {systolic} is not plausible.")
+                skipped += 1
+                continue
+            encounters.append({"patient_id": patient_id, "systolic": systolic})
+    return encounters, skipped
 
 
 def main():
